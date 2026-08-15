@@ -1,0 +1,295 @@
+---
+import Base from "../layouts/Base.astro";
+import Terminal from "../components/Terminal.astro";
+import CodeBlock from "../components/CodeBlock.astro";
+import {
+  FILE_STRUCTURE,
+  REPRO_MD_CONTENT,
+  ASSERTION_TYPES,
+  SAVE_EXAMPLE,
+  CI_WORKFLOW,
+  TRACE_EXCERPT,
+  HERO_TERMINAL_HTML,
+  MINIMIZE_HTML,
+  CTA_HTML,
+} from "../content/snippets";
+---
+
+<Base title="repro.md — Reproduce AI agent failures">
+
+  <!-- Section 1: Hero -->
+  <section class="hero">
+    <div class="container">
+      <h1>Reproduce AI agent failures.</h1>
+      <p class="subtitle">Turn a failed agent run into a reproducible regression test.</p>
+
+      <Terminal id="hero-term" html={HERO_TERMINAL_HTML} label="Recording a failed agent run, replaying it without an API key, and running it as a regression test" />
+
+      <div class="btn-group">
+        <a href="/docs/" class="btn btn--primary">Get started</a>
+        <a href="https://github.com/vgudzhev/repro" class="btn btn--secondary">GitHub</a>
+        <a href="/spec/" class="btn btn--secondary">View specification</a>
+      </div>
+
+      <div class="status-line">
+        <span>Open format</span>
+        <span>Git-native</span>
+        <span>No API key required</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 2: The problem -->
+  <section>
+    <div class="container">
+      <h2>Agent failures disappear.</h2>
+      <div class="prose">
+        <p>A traditional bug comes with a reproduction.</p>
+        <p>Agent failures come with a transcript.</p>
+        <p>The model changes. The prompt changes. The environment changes. The agent takes a different path.</p>
+        <p>By the time you try again, the failure is gone.</p>
+      </div>
+
+      <div class="flow" role="img" aria-label="Workflow: failure leads to record, then replay, then test">
+        <span class="flow-item">failure</span>
+        <span class="flow-sep">&rarr;</span>
+        <span class="flow-item">record</span>
+        <span class="flow-sep">&rarr;</span>
+        <span class="flow-item">replay</span>
+        <span class="flow-sep">&rarr;</span>
+        <span class="flow-item">test</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 3: How it works -->
+  <section>
+    <div class="container">
+      <h2>The model doesn&rsquo;t have to be deterministic.</h2>
+      <div class="prose">
+        <p>During replay, the real agent runs. Model responses come from the recorded trace. No API key. No inference cost.</p>
+      </div>
+
+      <div class="diagram" role="img" aria-label="Architecture: the agent talks to a repro proxy. During recording, the proxy forwards requests to the real API and captures responses. During replay, the proxy serves responses from the recorded trace.">
+        <pre>
+&#x250c;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2510;
+&#x2502;          AI AGENT           &#x2502;
+&#x2502;  prompt &#x2192; tool &#x2192; tool &#x2192; &#x2026;  &#x2502;
+&#x2514;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x252c;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2518;
+               &#x2502;
+          repro proxy
+               &#x2502;
+    &#x250c;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2534;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2510;
+    &#x2502;  RECORD:            &#x2502;  REPLAY:
+    &#x2502;  forward + capture  &#x2502;  serve from trace
+    &#x2514;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2500;&#x2518;</pre>
+      </div>
+
+      <div class="prose" style="margin-top: var(--space-lg);">
+        <p>The proxy sits between the agent and the model API. On record, it captures every request and response. On replay, it matches incoming requests by normalized SHA-256 hash and serves the recorded response. The agent doesn&rsquo;t know the difference.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 4: The artifact -->
+  <section>
+    <div class="container">
+      <h2>A failure you can commit.</h2>
+
+      <CodeBlock filename=".repro/" id="file-structure" code={FILE_STRUCTURE} />
+      <CodeBlock filename="REPRO.md" id="repro-md" code={REPRO_MD_CONTENT} />
+
+      <div class="prose" style="margin-top: var(--space-lg);">
+        <p>Commit them. Review them in PRs. Replay them in CI. Read them without installing anything.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 5: Workflow -->
+  <section>
+    <div class="container">
+      <h2>From failure to regression test.</h2>
+
+      <div class="steps">
+        <div class="step">
+          <div class="step-number">01</div>
+          <div>
+            <div class="step-title">RECORD</div>
+            <div class="step-cmd"><code>repro record -- &lt;agent&gt;</code></div>
+            <div class="step-desc">Proxy captures every model call. Secrets redacted at capture time.</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-number">02</div>
+          <div>
+            <div class="step-title">REPLAY</div>
+            <div class="step-cmd"><code>repro run &lt;id&gt;</code></div>
+            <div class="step-desc">Agent runs against recorded responses. No network needed.</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-number">03</div>
+          <div>
+            <div class="step-title">INSPECT</div>
+            <div class="step-cmd"><code>repro diff &lt;a&gt; &lt;b&gt;</code> &middot; <code>repro explain &lt;a&gt; &lt;b&gt;</code></div>
+            <div class="step-desc">LCS-aligned trace comparison. Divergence localization.</div>
+          </div>
+        </div>
+
+        <div class="step">
+          <div class="step-number">04</div>
+          <div>
+            <div class="step-title">TEST</div>
+            <div class="step-cmd"><code>repro test</code></div>
+            <div class="step-desc">CI entry point. No API key. Exit code 0 or 1.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 6: Assertions -->
+  <section>
+    <div class="container">
+      <h2>Test what the agent did.</h2>
+
+      <div class="assertion-list">
+        {ASSERTION_TYPES.map(a => (
+          <div class="assertion">
+            <span class="assertion-type">{a.type}</span>
+            <span class="assertion-desc">{a.desc}</span>
+          </div>
+        ))}
+      </div>
+
+      <CodeBlock filename="shell" id="save-example" code={SAVE_EXAMPLE} />
+
+      <div class="prose" style="margin-top: var(--space-lg);">
+        <p>Oracle-free. No model needed to judge correctness. The assertions check structure and behavior, not output quality.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 7: Minimization -->
+  <section>
+    <div class="container">
+      <h2>Find the smallest reproduction.</h2>
+
+      <Terminal html={MINIMIZE_HTML} label="Delta-debugging reduces 47 context items down to 3 that reproduce the failure" />
+
+      <div class="prose" style="margin-top: var(--space-lg);">
+        <p>The ddmin algorithm and budget management are implemented. <code>repro minimize</code> uses delta debugging to find the minimal set of context items that still reproduce the failure. Live oracle integration is in progress.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 8: CI -->
+  <section>
+    <div class="container">
+      <h2>Regressions belong in CI.</h2>
+
+      <CodeBlock filename=".github/workflows/repro.yml" lang="yaml" id="ci-workflow" code={CI_WORKFLOW} />
+
+      <p class="prose" style="margin-top: var(--space-lg); font-family: var(--font-mono); font-size: 0.9375rem;">
+        No API key. No inference. No model cost.
+      </p>
+    </div>
+  </section>
+
+  <!-- Section 9: Not a dashboard -->
+  <section>
+    <div class="container">
+      <h2>Not another dashboard.</h2>
+
+      <div class="comparison" role="img" aria-label="Comparison: Observability goes from agent to trace to dashboard to inspect and stops. Repro goes from agent to failure to replay to minimize to regression test to CI.">
+        <div class="comparison-col">
+          <h3>Observability</h3>
+          <div class="flow-step">agent</div>
+          <div class="flow-arrow">&darr;</div>
+          <div class="flow-step">trace</div>
+          <div class="flow-arrow">&darr;</div>
+          <div class="flow-step">dashboard</div>
+          <div class="flow-arrow">&darr;</div>
+          <div class="flow-step">inspect</div>
+        </div>
+        <div class="comparison-col">
+          <h3>Repro</h3>
+          <div class="flow-step">agent</div>
+          <div class="flow-arrow">&darr;</div>
+          <div class="flow-step">failure</div>
+          <div class="flow-arrow">&darr;</div>
+          <div class="flow-step">replay</div>
+          <div class="flow-arrow">&darr;</div>
+          <div class="flow-step">minimize</div>
+          <div class="flow-arrow">&darr;</div>
+          <div class="flow-step">regression test</div>
+          <div class="flow-arrow">&darr;</div>
+          <div class="flow-step">CI</div>
+        </div>
+      </div>
+
+      <div class="prose" style="margin-top: var(--space-xl);">
+        <p>Observability tells you what happened. repro gives you something you can run again.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 10: Open format -->
+  <section>
+    <div class="container">
+      <h2>A format, not a platform.</h2>
+
+      <div class="fan-in" role="img" aria-label="Claude Code, Codex, OpenHands, Cursor, and custom agents all produce .repro/ artifacts in the same format">
+        <div class="fan-in-sources">
+          <span>Claude Code</span>
+          <span>Codex</span>
+          <span>OpenHands</span>
+          <span>Cursor</span>
+          <span>Custom agent</span>
+        </div>
+        <div class="fan-in-arrow">&rarr;</div>
+        <div class="fan-in-target">.repro/</div>
+      </div>
+
+      <div class="prose" style="margin-top: var(--space-lg);">
+        <p>The CLI is one implementation. The reproduction artifact is the primitive. The goal is a portable failure format that works across agent tooling.</p>
+        <p>Currently supports Anthropic Messages API. Other providers planned.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 11: Specification peek -->
+  <section>
+    <div class="container">
+      <h2>Simple enough to inspect.</h2>
+
+      <CodeBlock filename="trace.json" lang="json" id="trace-excerpt" code={TRACE_EXCERPT} />
+
+      <p class="prose" style="margin-top: var(--space-sm); font-size: 0.875rem; color: var(--color-fg-dim);">
+        Event types: <code>process.start</code>, <code>process.exit</code>, <code>model.request</code>, <code>model.response</code>. Tool calls are embedded inside model request/response bodies.
+      </p>
+
+      <div class="btn-group" style="margin-top: var(--space-lg);">
+        <a href="/spec/" class="btn btn--secondary">Read the specification &rarr;</a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section 12: Final CTA -->
+  <section>
+    <div class="container">
+      <h2>Make agent failures reproducible.</h2>
+
+      <Terminal html={CTA_HTML} label="Get started by recording an agent run" />
+
+      <div class="btn-group">
+        <a href="https://github.com/vgudzhev/repro" class="btn btn--primary">GitHub</a>
+        <a href="/docs/" class="btn btn--secondary">Documentation</a>
+        <a href="/spec/" class="btn btn--secondary">Specification</a>
+      </div>
+    </div>
+  </section>
+
+</Base>

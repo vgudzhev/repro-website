@@ -1,0 +1,20 @@
+---
+interface Props {
+  id?: string;
+  label?: string;
+  html: string;
+}
+
+const { id, label, html } = Astro.props;
+---
+
+<div class="terminal" role={label ? "img" : undefined} aria-label={label}>
+  <div class="terminal-header" aria-hidden="true">
+    <span class="terminal-dot terminal-dot--red"></span>
+    <span class="terminal-dot terminal-dot--yellow"></span>
+    <span class="terminal-dot terminal-dot--green"></span>
+  </div>
+  <div class="terminal-body">
+    <pre id={id} set:html={html} />
+  </div>
+</div>

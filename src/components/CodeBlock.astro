@@ -1,0 +1,22 @@
+---
+interface Props {
+  filename?: string;
+  lang?: string;
+  id?: string;
+  code: string;
+}
+
+const { filename, lang, id, code } = Astro.props;
+---
+
+<div class="code-block">
+  {(filename || lang) && (
+    <div class="code-block-header">
+      <span>{filename || lang}</span>
+      {id && <button class="copy-btn" data-target={id}>copy</button>}
+    </div>
+  )}
+  <div class="code-block-body">
+    <pre id={id} set:html={code} />
+  </div>
+</div>

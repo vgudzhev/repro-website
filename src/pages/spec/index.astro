@@ -1,0 +1,169 @@
+---
+import Base from "../../layouts/Base.astro";
+import CodeBlock from "../../components/CodeBlock.astro";
+import {
+  FILE_STRUCTURE,
+  REPRO_MD_CONTENT,
+  TRACE_EXCERPT,
+  ASSERTION_TYPES,
+} from "../../content/snippets";
+---
+
+<Base title="Specification — repro.md" description="The repro.md format specification — trace events, assertions, blob storage, and the REPRO.md manifest.">
+
+  <section style="padding-top: var(--space-2xl);">
+    <div class="container container--narrow">
+      <p class="section-label">Specification</p>
+      <h1 style="font-size: clamp(1.75rem, 4vw, 2.25rem);">repro.md format</h1>
+      <p class="subtitle">The reproduction artifact format for AI agent failures.</p>
+      <p class="prose" style="margin-top: var(--space-md);">Version 0.1</p>
+    </div>
+  </section>
+
+  <!-- Overview -->
+  <section>
+    <div class="container container--narrow">
+      <h2 id="overview">Overview</h2>
+      <div class="prose">
+        <p>A repro artifact is a directory containing a recorded trace of an AI agent run, plus optional assertions. The trace captures every model API request and response, allowing the run to be replayed deterministically without an API key.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Directory structure -->
+  <section>
+    <div class="container container--narrow">
+      <h2 id="structure">Directory structure</h2>
+      <CodeBlock filename=".repro/" id="spec-structure" code={FILE_STRUCTURE} />
+      <div class="prose">
+        <p>Each recording gets a unique directory under <code>.repro/</code>. IDs are prefixed with <code>r-</code> followed by a short hex identifier.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Trace format -->
+  <section>
+    <div class="container container--narrow">
+      <h2 id="trace">Trace format</h2>
+      <div class="prose">
+        <p><code>trace.json</code> is a JSON array of events. Each event has a sequence number, type, timestamp, and data payload.</p>
+      </div>
+
+      <CodeBlock filename="trace.json" lang="json" id="spec-trace" code={TRACE_EXCERPT} />
+
+      <h3 id="event-types" style="margin-top: var(--space-xl);">Event types</h3>
+      <div class="assertion-list" style="margin-top: var(--space-md);">
+        <div class="assertion">
+          <span class="assertion-type">process.start</span>
+          <span class="assertion-desc">Agent process started. Data: command, pid.</span>
+        </div>
+        <div class="assertion">
+          <span class="assertion-type">process.exit</span>
+          <span class="assertion-desc">Agent process exited. Data: exit code.</span>
+        </div>
+        <div class="assertion">
+          <span class="assertion-type">model.request</span>
+          <span class="assertion-desc">Model API request. Data: normalized hash, per-message hashes, request body.</span>
+        </div>
+        <div class="assertion">
+          <span class="assertion-type">model.response</span>
+          <span class="assertion-desc">Model API response. Data: response body including tool calls.</span>
+        </div>
+      </div>
+      <div class="prose" style="margin-top: var(--space-lg);">
+        <p>Tool calls and tool results are embedded inside <code>model.request</code> and <code>model.response</code> bodies. They are not separate event types.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Hash matching -->
+  <section>
+    <div class="container container--narrow">
+      <h2 id="matching">Request matching</h2>
+      <div class="prose">
+        <p>During replay, incoming requests are matched to recorded requests by normalized SHA-256 hash of the message content. This is the most important design decision in the format.</p>
+        <p>Matching by hash instead of sequence number means that minor upstream changes (prompt preamble, system message formatting) don&rsquo;t break replay as long as the substantive message content is unchanged.</p>
+        <p>Each request includes both a <code>normalizedHash</code> (hash of the full normalized request) and per-message hashes in <code>messageHashes</code> for divergence localization.</p>
+      </div>
+
+      <h3 style="margin-top: var(--space-xl);">Replay modes</h3>
+      <div class="assertion-list" style="margin-top: var(--space-md);">
+        <div class="assertion">
+          <span class="assertion-type">strict</span>
+          <span class="assertion-desc">Hash miss aborts replay and reports which message diverged.</span>
+        </div>
+        <div class="assertion">
+          <span class="assertion-type">lenient</span>
+          <span class="assertion-desc">Hash miss falls back to positional matching with warnings.</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Blob storage -->
+  <section>
+    <div class="container container--narrow">
+      <h2 id="blobs">Blob storage</h2>
+      <div class="prose">
+        <p>Large payloads are stored as content-addressed files in the <code>blobs/</code> directory. Trace events reference them with <code>blob:sha256-...</code> URIs.</p>
+        <p>This keeps <code>trace.json</code> small and readable while preserving the full payload for replay.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Meta -->
+  <section>
+    <div class="container container--narrow">
+      <h2 id="meta">meta.json</h2>
+      <div class="prose">
+        <p>Contains recording metadata: timestamp, agent command, environment information, and repro version. Secrets are redacted at capture time.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Assertions -->
+  <section>
+    <div class="container container--narrow">
+      <h2 id="assertions">assertions.json</h2>
+      <div class="prose">
+        <p>Optional file containing assertions to check during replay.</p>
+      </div>
+      <div class="assertion-list" style="margin-top: var(--space-md);">
+        {ASSERTION_TYPES.map(a => (
+          <div class="assertion">
+            <span class="assertion-type">{a.type}</span>
+            <span class="assertion-desc">{a.desc}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- REPRO.md -->
+  <section>
+    <div class="container container--narrow">
+      <h2 id="manifest">REPRO.md manifest</h2>
+      <div class="prose">
+        <p>The manifest lists all known agent failures in the project. It is a Markdown file readable without installing anything.</p>
+      </div>
+      <CodeBlock filename="REPRO.md" id="spec-repro-md" code={REPRO_MD_CONTENT} />
+    </div>
+  </section>
+
+  <!-- Secret redaction -->
+  <section>
+    <div class="container container--narrow">
+      <h2 id="redaction">Secret redaction</h2>
+      <div class="prose">
+        <p>Secrets are redacted at capture time, before any data touches disk. The proxy detects and removes:</p>
+        <ul style="margin-top: var(--space-sm); padding-left: 1.5em; list-style: disc;">
+          <li>Environment variables containing keys or tokens</li>
+          <li>API keys (Anthropic, OpenAI, and common patterns)</li>
+          <li>JWTs</li>
+          <li>PEM blocks</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+</Base>

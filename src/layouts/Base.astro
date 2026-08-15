@@ -1,0 +1,67 @@
+---
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = "Open format for reproducible AI agent failures." } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+  </head>
+  <body>
+    <nav class="nav" role="navigation" aria-label="Main">
+      <a href="/" class="nav-logo">repro<span class="dim">.md</span></a>
+      <ul class="nav-links">
+        <li><a href="/docs/">Docs</a></li>
+        <li><a href="https://github.com/vgudzhev/repro">GitHub</a></li>
+        <li><span class="nav-version">v0.1</span></li>
+      </ul>
+    </nav>
+    <main>
+      <slot />
+    </main>
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-inner">
+          <div>
+            <div class="footer-logo">repro<span class="dim">.md</span></div>
+            <div class="footer-tagline">Open format for reproducible AI agent failures.</div>
+          </div>
+          <ul class="footer-links">
+            <li><a href="/docs/">Docs</a></li>
+            <li><a href="https://github.com/vgudzhev/repro">GitHub</a></li>
+            <li><a href="/spec/">Specification</a></li>
+            <li><span style="font-size:0.8125rem;color:var(--color-fg-dim)">v0.1</span></li>
+          </ul>
+        </div>
+      </div>
+    </footer>
+    <script>
+      document.querySelectorAll('.copy-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const target = btn.getAttribute('data-target');
+          if (!target) return;
+          const el = document.getElementById(target);
+          if (!el) return;
+          navigator.clipboard.writeText(el.textContent || '').then(() => {
+            const prev = btn.textContent;
+            btn.textContent = 'copied';
+            setTimeout(() => { btn.textContent = prev; }, 1500);
+          });
+        });
+      });
+    </script>
+  </body>
+</html>
+
+<style is:global>
+  @import "../styles/global.css";
+</style>

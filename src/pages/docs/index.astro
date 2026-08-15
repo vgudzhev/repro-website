@@ -1,0 +1,147 @@
+---
+import Base from "../../layouts/Base.astro";
+import Terminal from "../../components/Terminal.astro";
+import CodeBlock from "../../components/CodeBlock.astro";
+import {
+  CLI_COMMANDS,
+  RECORD_OUTPUT_HTML,
+  REPLAY_OUTPUT_HTML,
+  TEST_OUTPUT_HTML,
+  INIT_HTML,
+  FILE_STRUCTURE,
+  REPRO_MD_CONTENT,
+  ASSERTION_TYPES,
+  SAVE_EXAMPLE,
+  CI_WORKFLOW,
+} from "../../content/snippets";
+---
+
+<Base title="Documentation — repro.md" description="Getting started with repro.md — installation, recording, replay, and CI setup.">
+
+  <section style="padding-top: var(--space-2xl);">
+    <div class="container container--narrow">
+      <p class="section-label">Documentation</p>
+      <h1 style="font-size: clamp(1.75rem, 4vw, 2.25rem);">Getting started</h1>
+      <p class="subtitle">Install repro, record a failure, replay it, and add it to CI.</p>
+    </div>
+  </section>
+
+  <!-- Install -->
+  <section>
+    <div class="container container--narrow">
+      <h2 id="install">Install</h2>
+      <CodeBlock filename="shell" id="install-cmd" code="npm install -g repro.md" />
+      <div class="prose">
+        <p>Or use <code>npx repro</code> without installing globally.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Init -->
+  <section>
+    <div class="container container--narrow">
+      <h2 id="init">Initialize</h2>
+      <Terminal html={INIT_HTML} label="Initialize repro in your project" />
+      <div class="prose">
+        <p>This creates the <code>.repro/</code> directory for recordings and a <code>REPRO.md</code> manifest file.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Record -->
+  <section>
+    <div class="container container--narrow">
+      <h2 id="record">Record</h2>
+      <Terminal html={RECORD_OUTPUT_HTML} label="Recording an agent run" />
+      <div class="prose">
+        <p>The proxy intercepts every model API call, forwards it to the real API, and records both the request and response. Secrets are redacted at capture time before anything touches disk.</p>
+        <p>The proxy sets <code>ANTHROPIC_BASE_URL</code> to point the agent at the local proxy. The agent talks to the proxy thinking it's the real API.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Replay -->
+  <section>
+    <div class="container container--narrow">
+      <h2 id="replay">Replay</h2>
+      <Terminal html={REPLAY_OUTPUT_HTML} label="Replaying a recorded run" />
+      <div class="prose">
+        <p>The agent runs in an isolated git worktree. Model responses come from the recorded trace. No API key required. No inference cost.</p>
+        <p>Requests are matched by normalized SHA-256 hash of the message content, not by sequence number. In strict mode, a hash miss aborts and reports which message diverged. In lenient mode, it falls back to positional matching with warnings.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Test -->
+  <section>
+    <div class="container container--narrow">
+      <h2 id="test">Test</h2>
+      <Terminal html={TEST_OUTPUT_HTML} label="Running all recorded failures as regression tests" />
+      <div class="prose">
+        <p>Replays all open failures listed in <code>REPRO.md</code>. Exit code 0 if all pass, 1 otherwise.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Save -->
+  <section>
+    <div class="container container--narrow">
+      <h2 id="save">Save with assertions</h2>
+      <CodeBlock filename="shell" id="docs-save" code={SAVE_EXAMPLE} />
+      <div class="prose">
+        <p>Promotes a recording into <code>REPRO.md</code> with a title and assertions. Assertions are checked during replay.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Assertions -->
+  <section>
+    <div class="container container--narrow">
+      <h2 id="assertions">Assertion types</h2>
+      <div class="assertion-list">
+        {ASSERTION_TYPES.map(a => (
+          <div class="assertion">
+            <span class="assertion-type">{a.type}</span>
+            <span class="assertion-desc">{a.desc}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- CLI Reference -->
+  <section>
+    <div class="container container--narrow">
+      <h2 id="commands">CLI reference</h2>
+      <div class="assertion-list">
+        {CLI_COMMANDS.map(c => (
+          <div class="assertion">
+            <span class="assertion-type">{c.cmd}</span>
+            <span class="assertion-desc">{c.desc}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- File structure -->
+  <section>
+    <div class="container container--narrow">
+      <h2 id="files">File structure</h2>
+      <CodeBlock filename=".repro/" id="docs-file-structure" code={FILE_STRUCTURE} />
+      <CodeBlock filename="REPRO.md" id="docs-repro-md" code={REPRO_MD_CONTENT} />
+    </div>
+  </section>
+
+  <!-- CI -->
+  <section>
+    <div class="container container--narrow">
+      <h2 id="ci">CI setup</h2>
+      <CodeBlock filename=".github/workflows/repro.yml" lang="yaml" id="docs-ci" code={CI_WORKFLOW} />
+      <div class="prose">
+        <p>No API key needed. The replay proxy serves responses from the recorded trace.</p>
+      </div>
+    </div>
+  </section>
+
+</Base>
