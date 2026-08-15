@@ -30,9 +30,10 @@ import {
   <section>
     <div class="container container--narrow">
       <h2 id="install">Install</h2>
-      <CodeBlock filename="shell" id="install-cmd" code="npm install -g repro.md" />
+      <CodeBlock filename="shell" id="install-cmd" code="npm install -g repro-md" />
       <div class="prose">
-        <p>Or use <code>npx repro</code> without installing globally.</p>
+        <p>Or use <code>npx repro-md</code> without installing globally. Requires Node.js 20+.</p>
+        <p>The agent you want to record (e.g. <code>claude</code>) must be installed separately &mdash; repro spawns it as a child process.</p>
       </div>
     </div>
   </section>
@@ -55,7 +56,7 @@ import {
       <Terminal html={RECORD_OUTPUT_HTML} label="Recording an agent run" />
       <div class="prose">
         <p>The proxy intercepts every model API call, forwards it to the real API, and records both the request and response. Secrets are redacted at capture time before anything touches disk.</p>
-        <p>The proxy sets <code>ANTHROPIC_BASE_URL</code> to point the agent at the local proxy. The agent talks to the proxy thinking it's the real API.</p>
+        <p>Recording requires a real <code>ANTHROPIC_API_KEY</code> &mdash; it makes real API calls. The proxy sets <code>ANTHROPIC_BASE_URL</code> to point the agent at the local proxy. The agent talks to the proxy thinking it's the real API.</p>
       </div>
     </div>
   </section>
@@ -139,7 +140,7 @@ import {
       <h2 id="ci">CI setup</h2>
       <CodeBlock filename=".github/workflows/repro.yml" lang="yaml" id="docs-ci" code={CI_WORKFLOW} />
       <div class="prose">
-        <p>No API key needed. The replay proxy serves responses from the recorded trace.</p>
+        <p>No API key needed. The replay proxy serves responses from the recorded trace. The agent binary (e.g. <code>claude</code>) must be available on the runner.</p>
       </div>
     </div>
   </section>

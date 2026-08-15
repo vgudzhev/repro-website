@@ -117,7 +117,8 @@ AGENTS.md
 src/generated/user_pb.ts
 edit_file`;
 
-export const CTA_HTML = `<span class="prompt">$</span> repro record -- &lt;agent&gt;`;
+export const CTA_HTML = `<span class="prompt">$</span> npm install repro-md
+<span class="prompt">$</span> repro record -- &lt;agent&gt;`;
 
 export const INIT_HTML = `<span class="prompt">$</span> repro init
 repro: created .repro/
@@ -146,5 +147,8 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
       - run: npm ci && npm run build
+      # Install the agent CLI used in your recordings
+      - run: npm install -g @anthropic-ai/claude-code
       - run: npx repro test`;

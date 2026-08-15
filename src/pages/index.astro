@@ -32,9 +32,10 @@ import {
       </div>
 
       <div class="status-line">
+        <span>v0.1 alpha</span>
         <span>Open format</span>
         <span>Git-native</span>
-        <span>No API key required</span>
+        <span>No API key for replay</span>
       </div>
     </div>
   </section>
@@ -180,7 +181,7 @@ import {
       <Terminal html={MINIMIZE_HTML} label="Delta-debugging reduces 47 context items down to 3 that reproduce the failure" />
 
       <div class="prose" style="margin-top: var(--space-lg);">
-        <p>The ddmin algorithm and budget management are implemented. <code>repro minimize</code> uses delta debugging to find the minimal set of context items that still reproduce the failure. Live oracle integration is in progress.</p>
+        <p><code>repro minimize</code> uses the ddmin algorithm to find the minimal set of context items that still reproduce the failure. Live oracle re-runs the agent against the real API with budget management.</p>
       </div>
     </div>
   </section>
@@ -255,7 +256,7 @@ import {
 
       <div class="prose" style="margin-top: var(--space-lg);">
         <p>The CLI is one implementation. The reproduction artifact is the primitive. The goal is a portable failure format that works across agent tooling.</p>
-        <p>Currently supports Anthropic Messages API. Other providers planned.</p>
+        <p>v0.1 is validated against Claude Code. Anthropic Messages API only. Other agents and providers are architecturally supported but untested.</p>
       </div>
     </div>
   </section>
