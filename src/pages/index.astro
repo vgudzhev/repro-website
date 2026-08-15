@@ -12,6 +12,8 @@ import {
   HERO_TERMINAL_HTML,
   MINIMIZE_HTML,
   CTA_HTML,
+  SCENARIO_SETUP,
+  SCENARIOS,
 } from "../content/snippets";
 ---
 
@@ -148,6 +150,51 @@ import {
           </div>
         </div>
       </div>
+    </div>
+  </section>
+
+  <!-- Section 5b: Scenarios -->
+  <section class="scenarios-section">
+    <div class="container">
+      <h2>Five failures you'll recognise.</h2>
+      <div class="prose">
+        <p>These are not guaranteed to reproduce. The agent may behave correctly — and a passing assertion is also a valid result. The point is to have something to test against.</p>
+      </div>
+
+      <details class="scenario-setup">
+        <summary>Shared setup</summary>
+        <p class="scenario-setup-note">Run once. All five scenarios use this repo.</p>
+        <CodeBlock filename="shell" id="scenario-setup" code={SCENARIO_SETUP} />
+      </details>
+
+      {SCENARIOS.map((s, i) => (
+        <details class="scenario" open={i === 0 ? true : undefined}>
+          <summary>
+            <span class="scenario-number">{String(i + 1).padStart(2, '0')}</span>
+            <span class="scenario-title">{s.title}</span>
+          </summary>
+          <div class="scenario-body">
+            <p class="scenario-pain">{s.pain}</p>
+            <div class="scenario-step">
+              <span class="scenario-step-label">Prompt</span>
+              <blockquote class="scenario-prompt" set:html={s.prompt} />
+            </div>
+            <div class="scenario-step">
+              <span class="scenario-step-label">Record</span>
+              <CodeBlock filename="shell" id={`scenario-${s.id}-record`} code="repro record -- claude" />
+            </div>
+            <div class="scenario-step">
+              <span class="scenario-step-label">Assert</span>
+              <CodeBlock filename="shell" id={`scenario-${s.id}-save`} code={s.save} />
+            </div>
+            <div class="scenario-step">
+              <span class="scenario-step-label">Test</span>
+              <CodeBlock filename="shell" id={`scenario-${s.id}-test`} code="repro test" />
+            </div>
+            <p class="scenario-expect" set:html={`<strong>Expect:</strong> ${s.expect}`} />
+          </div>
+        </details>
+      ))}
     </div>
   </section>
 
