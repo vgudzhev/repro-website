@@ -52,7 +52,7 @@ import {
       <CodeBlock filename="shell" id="install-cmd" code="npm install -g repro-md" />
       <div class="prose">
         <p>Or use <code>npx repro-md</code> without installing globally. Requires Node.js 20+.</p>
-        <p>The agent you want to record (e.g. <code>claude</code>) must be installed separately &mdash; repro spawns it as a child process.</p>
+        <p>The agent you want to record (e.g. <code>claude</code>) must be installed separately &mdash; repro spawns it as a child process. repro works with any agent that uses HTTP-based model APIs (Anthropic Messages API). Codex is not currently supported &mdash; it uses WebSocket transport exclusively and does not honor <code>OPENAI_BASE_URL</code>.</p>
         <p>Verify the install:</p>
       </div>
       <CodeBlock filename="shell" id="verify-cmd" code="repro --help" />

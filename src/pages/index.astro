@@ -304,7 +304,7 @@ import {
 
       <div class="prose" style="margin-top: var(--space-lg);">
         <p>The CLI is one implementation. The reproduction artifact is the primitive. The goal is a portable failure format that works across agent tooling.</p>
-        <p>v0.1 is validated against Claude Code. Anthropic Messages API only. Codex support (OpenAI API) is planned. Other agents and providers are architecturally supported but untested.</p>
+        <p>v0.1 is validated against Claude Code. Anthropic Messages API only. Codex uses WebSocket transport exclusively and does not honor <code>OPENAI_BASE_URL</code>, so HTTP proxy interception is not possible — Codex support is blocked on upstream changes. Other agents that use HTTP-based model APIs are architecturally supported but untested.</p>
       </div>
     </div>
   </section>
