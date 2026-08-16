@@ -1,6 +1,6 @@
 export const CLI_COMMANDS = [
   { cmd: "repro init", desc: "Scaffold .repro/ and REPRO.md" },
-  { cmd: "repro record -- <cmd>", desc: "Record an agent run through the proxy" },
+  { cmd: "repro record [--model <name>] [--auth plan|credits] -- <cmd>", desc: "Record an agent run through the proxy" },
   { cmd: "repro run <id>", desc: "Replay a recorded run" },
   { cmd: "repro save <id>", desc: "Promote a recording into REPRO.md" },
   { cmd: "repro test", desc: "Replay all open failures in CI" },
@@ -80,9 +80,11 @@ export const TRACE_EXCERPT = `[
   }
 ]`;
 
-export const HERO_TERMINAL_HTML = `<span class="prompt">$</span> repro record -- claude
-  repro: agent failed after 41 events
-  repro: saved r-7f3a91
+export const HERO_TERMINAL_HTML = `<span class="prompt">$</span> repro record --model claude-sonnet-4 --auth plan -- claude --print "fix the bug"
+  repro: recording r-7f3a91
+  repro: model=claude-sonnet-4
+  repro: auth=plan
+  repro: completed after 41 events
 
 <span class="prompt">$</span> repro run r-7f3a91
   repro: <span class="pass">✓</span> reproduced — 41 events, 0 API calls, 0 API keys
@@ -90,11 +92,27 @@ export const HERO_TERMINAL_HTML = `<span class="prompt">$</span> repro record --
 <span class="prompt">$</span> repro test
   repro: <span class="pass">✓</span> 2 passed, <span class="fail">✗</span> 1 failed, <span class="warn">⚠</span> 0 diverged`;
 
-export const RECORD_OUTPUT_HTML = `<span class="prompt">$</span> repro record -- claude
+export const RECORD_OUTPUT_HTML = `<span class="prompt">$</span> repro record --auth plan -- claude --print "fix the login bug"
 repro: recording r-7f3a91
+repro: auth=plan
 repro: proxy listening on http://127.0.0.1:54321
-repro: agent failed after 41 events
+repro: completed after 41 events
 repro: saved r-7f3a91`;
+
+export const RECORD_OPTIONS_HTML = `<span class="dim"># Use your claude.ai subscription (no API key needed)</span>
+<span class="prompt">$</span> repro record --auth plan -- claude --print "fix the bug"
+
+<span class="dim"># Use API credits (requires ANTHROPIC_API_KEY)</span>
+<span class="prompt">$</span> repro record --auth credits -- claude --print "fix the bug"
+
+<span class="dim"># Specify which model to use</span>
+<span class="prompt">$</span> repro record --model claude-opus-4 --auth plan -- claude --print "fix the bug"`;
+
+export const RECORD_OPTIONS = [
+  { flag: "--model <name>", desc: "Passed to the agent CLI and stored in trace metadata for display/filtering" },
+  { flag: "--auth plan", desc: "Uses your claude.ai subscription; removes API key from the agent's environment" },
+  { flag: "--auth credits", desc: "Uses API key auth; requires ANTHROPIC_API_KEY to be set" },
+] as const;
 
 export const REPLAY_OUTPUT_HTML = `<span class="prompt">$</span> repro run r-7f3a91
 repro: replaying r-7f3a91 (41 events)

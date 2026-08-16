@@ -38,6 +38,7 @@ import {
         <span>Open format</span>
         <span>Git-native</span>
         <span>No API key for replay</span>
+        <span>Works with claude.ai subscription</span>
       </div>
     </div>
   </section>
@@ -118,8 +119,8 @@ import {
           <div class="step-number">01</div>
           <div>
             <div class="step-title">RECORD</div>
-            <div class="step-cmd"><code>repro record -- &lt;agent&gt;</code></div>
-            <div class="step-desc">Proxy captures every model call. Secrets redacted at capture time.</div>
+            <div class="step-cmd"><code>repro record [--model &lt;name&gt;] [--auth plan|credits] -- &lt;agent&gt;</code></div>
+            <div class="step-desc">Proxy captures every model call. Secrets redacted at capture time. Use <code>--auth plan</code> to record with your claude.ai subscription.</div>
           </div>
         </div>
 
@@ -303,7 +304,7 @@ import {
 
       <div class="prose" style="margin-top: var(--space-lg);">
         <p>The CLI is one implementation. The reproduction artifact is the primitive. The goal is a portable failure format that works across agent tooling.</p>
-        <p>v0.1 is validated against Claude Code. Anthropic Messages API only. Other agents and providers are architecturally supported but untested.</p>
+        <p>v0.1 is validated against Claude Code. Anthropic Messages API only. Codex support (OpenAI API) is planned. Other agents and providers are architecturally supported but untested.</p>
       </div>
     </div>
   </section>

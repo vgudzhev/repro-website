@@ -5,6 +5,8 @@ import CodeBlock from "../../components/CodeBlock.astro";
 import {
   CLI_COMMANDS,
   RECORD_OUTPUT_HTML,
+  RECORD_OPTIONS_HTML,
+  RECORD_OPTIONS,
   REPLAY_OUTPUT_HTML,
   TEST_OUTPUT_HTML,
   INIT_HTML,
@@ -22,29 +24,52 @@ import {
     <div class="container container--narrow">
       <p class="section-label">Documentation</p>
       <h1 style="font-size: clamp(1.75rem, 4vw, 2.25rem);">Getting started</h1>
-      <p class="subtitle">Install repro, record a failure, replay it, and add it to CI.</p>
+      <p class="subtitle">Install repro, record a failure, replay it, and add it to CI &mdash; step by step.</p>
+
+      <nav class="docs-toc">
+        <ul>
+          <li><a href="#install">Install</a></li>
+          <li><a href="#init">Initialize</a></li>
+          <li><a href="#record">Record</a></li>
+          <li><a href="#replay">Replay</a></li>
+          <li><a href="#save">Save with assertions</a></li>
+          <li><a href="#test">Test</a></li>
+          <li><a href="#options">Recording options</a></li>
+          <li><a href="#usecase">Use case walkthrough</a></li>
+          <li><a href="#assertions">Assertion types</a></li>
+          <li><a href="#commands">CLI reference</a></li>
+          <li><a href="#ci">CI setup</a></li>
+          <li><a href="#files">File structure</a></li>
+        </ul>
+      </nav>
     </div>
   </section>
 
   <!-- Install -->
   <section>
     <div class="container container--narrow">
-      <h2 id="install">Install</h2>
+      <h2 id="install">1. Install</h2>
       <CodeBlock filename="shell" id="install-cmd" code="npm install -g repro-md" />
       <div class="prose">
         <p>Or use <code>npx repro-md</code> without installing globally. Requires Node.js 20+.</p>
         <p>The agent you want to record (e.g. <code>claude</code>) must be installed separately &mdash; repro spawns it as a child process.</p>
+        <p>Verify the install:</p>
       </div>
+      <CodeBlock filename="shell" id="verify-cmd" code="repro --help" />
     </div>
   </section>
 
   <!-- Init -->
   <section>
     <div class="container container--narrow">
-      <h2 id="init">Initialize</h2>
+      <h2 id="init">2. Initialize</h2>
       <Terminal html={INIT_HTML} label="Initialize repro in your project" />
       <div class="prose">
-        <p>This creates the <code>.repro/</code> directory for recordings and a <code>REPRO.md</code> manifest file.</p>
+        <p>Navigate to your project's git repository and run <code>repro init</code>. This creates:</p>
+        <ul>
+          <li><code>.repro/</code> directory &mdash; where trace data is stored</li>
+          <li><code>REPRO.md</code> &mdash; a human-readable manifest of known failures (like a bug tracker in your repo)</li>
+        </ul>
       </div>
     </div>
   </section>
@@ -52,11 +77,12 @@ import {
   <!-- Record -->
   <section>
     <div class="container container--narrow">
-      <h2 id="record">Record</h2>
+      <h2 id="record">3. Record</h2>
       <Terminal html={RECORD_OUTPUT_HTML} label="Recording an agent run" />
       <div class="prose">
-        <p>The proxy intercepts every model API call, forwards it to the real API, and records both the request and response. Secrets are redacted at capture time before anything touches disk.</p>
-        <p>Recording requires a real <code>ANTHROPIC_API_KEY</code> &mdash; it makes real API calls. The proxy sets <code>ANTHROPIC_BASE_URL</code> to point the agent at the local proxy. The agent talks to the proxy thinking it's the real API.</p>
+        <p>Everything after <code>--</code> is the command repro will run. repro starts a local HTTP proxy, points the agent at it, and captures every request and response between the agent and the model API.</p>
+        <p>Secrets are redacted at capture time before anything touches disk. The trace is saved in <code>.repro/&lt;id&gt;/</code>.</p>
+        <p>If you have a <strong>claude.ai subscription</strong>, use <code>--auth plan</code> to record without needing an API key. See <a href="#options">Recording options</a> below.</p>
       </div>
     </div>
   </section>
@@ -64,22 +90,11 @@ import {
   <!-- Replay -->
   <section>
     <div class="container container--narrow">
-      <h2 id="replay">Replay</h2>
+      <h2 id="replay">4. Replay</h2>
       <Terminal html={REPLAY_OUTPUT_HTML} label="Replaying a recorded run" />
       <div class="prose">
-        <p>The agent runs in an isolated git worktree. Model responses come from the recorded trace. No API key required. No inference cost.</p>
-        <p>Requests are matched by normalized SHA-256 hash of the message content, not by sequence number. In strict mode, a hash miss aborts and reports which message diverged. In lenient mode, it falls back to positional matching with warnings.</p>
-      </div>
-    </div>
-  </section>
-
-  <!-- Test -->
-  <section>
-    <div class="container container--narrow">
-      <h2 id="test">Test</h2>
-      <Terminal html={TEST_OUTPUT_HTML} label="Running all recorded failures as regression tests" />
-      <div class="prose">
-        <p>Replays all open failures listed in <code>REPRO.md</code>. Exit code 0 if all pass, 1 otherwise.</p>
+        <p>The agent runs in an isolated git worktree checked out to the same commit. Model responses come from the recorded trace. <strong>No API key required. No inference cost.</strong></p>
+        <p>Requests are matched by normalized SHA-256 hash of the message content. In <strong>strict</strong> mode (default), a hash miss aborts and reports which message diverged. In <strong>lenient</strong> mode (<code>--lenient</code>), it falls back to positional matching with warnings.</p>
       </div>
     </div>
   </section>
@@ -87,10 +102,59 @@ import {
   <!-- Save -->
   <section>
     <div class="container container--narrow">
-      <h2 id="save">Save with assertions</h2>
+      <h2 id="save">5. Save with assertions</h2>
       <CodeBlock filename="shell" id="docs-save" code={SAVE_EXAMPLE} />
       <div class="prose">
-        <p>Promotes a recording into <code>REPRO.md</code> with a title and assertions. Assertions are checked during replay.</p>
+        <p>Promotes a recording into <code>REPRO.md</code> with a title and assertions. Assertions are checked during every replay.</p>
+        <p>Then commit everything:</p>
+      </div>
+      <CodeBlock filename="shell" id="docs-commit" code={`git add REPRO.md .repro/\ngit commit -m "add repro: agent modifies generated files"\ngit push`} />
+      <div class="prose">
+        <p>Anyone who clones the repo can now replay the failure.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Test -->
+  <section>
+    <div class="container container--narrow">
+      <h2 id="test">6. Test</h2>
+      <Terminal html={TEST_OUTPUT_HTML} label="Running all recorded failures as regression tests" />
+      <div class="prose">
+        <p>Replays all open failures listed in <code>REPRO.md</code>. Exit code 0 if all pass, 1 otherwise. Add this to your <a href="#ci">CI pipeline</a>.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Recording Options -->
+  <section>
+    <div class="container container--narrow">
+      <h2 id="options">Recording options</h2>
+      <div class="prose">
+        <p>Control how the agent is configured during recording. These flags go <strong>before</strong> the <code>--</code> separator.</p>
+      </div>
+      <Terminal html={RECORD_OPTIONS_HTML} label="Recording with --model and --auth flags" />
+      <div class="assertion-list" style="margin-top: var(--space-lg);">
+        {RECORD_OPTIONS.map(o => (
+          <div class="assertion">
+            <span class="assertion-type">{o.flag}</span>
+            <span class="assertion-desc">{o.desc}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Use Case -->
+  <section>
+    <div class="container container--narrow">
+      <h2 id="usecase">Use case: agent edits generated files</h2>
+      <div class="prose">
+        <p>Your project has auto-generated API types in <code>src/gen/</code>. You ask Claude Code to fix a bug, and it edits a generated file instead of the source that generates it. Here's how to catch that.</p>
+      </div>
+      <CodeBlock filename="shell" id="uc-record" code={`# Record the bad run\nrepro record --auth plan -- claude --print "fix the type error in getUserProfile"\n\n# Save with a forbidden_path assertion\nrepro save r-a1b2c3 --title "agent edits generated API types" \\\n  --assertion forbidden_path:src/gen/**\n\n# Replay to confirm the assertion catches it\nrepro run r-a1b2c3\n# repro: ✓ reproduced — 12 events, 0 API calls, 0 API keys\n# repro: ✗ assertion: forbidden_path matched: src/gen/api_types.ts\n\n# Commit and run in CI\ngit add REPRO.md .repro/ && git commit -m "repro: agent edits generated files"\nrepro test`} />
+      <div class="prose" style="margin-top: var(--space-md);">
+        <p>The <code>forbidden_path</code> assertion fires whenever any tool call touches a matching path. Commit it, add <code>repro test</code> to CI, and this failure is tracked permanently.</p>
       </div>
     </div>
   </section>
@@ -106,6 +170,9 @@ import {
             <span class="assertion-desc">{a.desc}</span>
           </div>
         ))}
+      </div>
+      <div class="prose" style="margin-top: var(--space-lg);">
+        <p>Oracle-free. No model needed to judge correctness. Assertions check structure and behavior, not output quality.</p>
       </div>
     </div>
   </section>
@@ -125,6 +192,20 @@ import {
     </div>
   </section>
 
+  <!-- CI -->
+  <section>
+    <div class="container container--narrow">
+      <h2 id="ci">CI setup</h2>
+      <div class="prose">
+        <p>No API key needed. The agent binary (e.g. <code>claude</code>) must be available on the runner.</p>
+      </div>
+      <CodeBlock filename=".github/workflows/repro.yml" lang="yaml" id="docs-ci" code={CI_WORKFLOW} />
+      <div class="prose">
+        <p><code>repro test</code> exits with code 0 if all replays pass, code 1 if any fail or diverge.</p>
+      </div>
+    </div>
+  </section>
+
   <!-- File structure -->
   <section>
     <div class="container container--narrow">
@@ -134,15 +215,44 @@ import {
     </div>
   </section>
 
-  <!-- CI -->
-  <section>
-    <div class="container container--narrow">
-      <h2 id="ci">CI setup</h2>
-      <CodeBlock filename=".github/workflows/repro.yml" lang="yaml" id="docs-ci" code={CI_WORKFLOW} />
-      <div class="prose">
-        <p>No API key needed. The replay proxy serves responses from the recorded trace. The agent binary (e.g. <code>claude</code>) must be available on the runner.</p>
-      </div>
-    </div>
-  </section>
-
 </Base>
+
+<style>
+  .docs-toc {
+    margin-top: var(--space-lg);
+    padding: var(--space-md) var(--space-lg);
+    background: var(--color-bg-alt);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+  }
+
+  .docs-toc ul {
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 4px 24px;
+  }
+
+  .docs-toc a {
+    font-family: var(--font-mono);
+    font-size: 0.8125rem;
+    color: var(--color-accent);
+    text-decoration: none;
+    display: block;
+    padding: 3px 0;
+  }
+
+  .docs-toc a:hover {
+    color: var(--color-accent-hover);
+    text-decoration: underline;
+  }
+
+  .prose ul {
+    padding-left: 1.5em;
+    margin-top: var(--space-sm);
+  }
+
+  .prose li {
+    margin-bottom: var(--space-xs);
+  }
+</style>
